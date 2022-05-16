@@ -3,7 +3,8 @@ import { Alert, AlertDescription, AlertIcon, AlertTitle, Box, Button, Flex, HSta
 import { HamburgerIcon, SearchIcon } from '@chakra-ui/icons';
 import useSwr from 'swr';
 import { ChangeEvent, useState } from 'react';
-import { MdFolder, MdDownload, MdPeople, MdSettings, MdUpload, MdCheckCircle, MdCloudUpload, MdOutlinePause, MdOutlineRemove, MdOutlineFolder, MdLabelOutline, MdTag } from 'react-icons/md';
+import { MdFolder, MdDownload, MdPeople, MdSettings, MdUpload, MdOutlineFindReplace, MdCloudUpload, MdOutlineRemove, MdOutlineFolder, MdLabelOutline, MdTag } from 'react-icons/md';
+import RemoveMenuItem from './components/RemoveMenuItem';
 
 interface Torrent {
   flags: number;
@@ -27,8 +28,13 @@ function AddTorrentMenuItem(props: any) {
 
   const [error, setError] = useState<Error>();
   const [loading, setLoading] = useState(false);
+  const [magnetUri, setMagnetUri] = useState('');
   const [type, setType] = useState('1');
   const [torrentFile, setTorrentFile] = useState<File | null>();
+  const [savePath, setSavePath] = useState('');
+
+  const magnetUriChanged = (event: ChangeEvent<HTMLInputElement>) => setMagnetUri(event.target.value);
+  const savePathChanged = (event: ChangeEvent<HTMLInputElement>) => setSavePath(event.target.value);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setTorrentFile(e.target.files?.item(0));
@@ -37,24 +43,11 @@ function AddTorrentMenuItem(props: any) {
   function add() {
     setLoading(true);
 
-    const reader = new FileReader();
-    reader.onload = function (ev) {
-      const idx = reader.result?.toString().indexOf('base64,')!;
-      const data = reader.result?.toString().substring(idx + 'base64,'.length);
-
-      fetch('/api/jsonrpc', {
-        body: JSON.stringify({
-          jsonrpc: '2.0',
-          method: 'session.addTorrent',
-          id: 1337,
-          params: {
-            save_path: '/tmp',
-            ti: data
-          }
-        }),
-        method: 'POST',
+    function perform(extra: Object) {
+      rpc('session.addTorrent', {
+        save_path: savePath,
+        ...extra
       })
-      .then(res => res.json())
       .then(res => {
         setLoading(false);
 
@@ -67,8 +60,21 @@ function AddTorrentMenuItem(props: any) {
       .catch(err => {
         setError(err);
       });
-    };
-    reader.readAsDataURL(torrentFile!);
+    }
+
+    if (type === '1') {
+      const reader = new FileReader();
+      reader.onload = function (ev) {
+        const idx = reader.result?.toString().indexOf('base64,')!;
+        const data = reader.result?.toString().substring(idx + 'base64,'.length);
+        perform({ ti: data });
+      };
+      reader.readAsDataURL(torrentFile!);
+    }
+
+    if (type === '2') {
+      perform({ magnet_uri: magnetUri });
+    }
   }
 
   return (
@@ -94,13 +100,13 @@ function AddTorrentMenuItem(props: any) {
                     <Input type="file" onChange={handleChange} />
                   }
                   { type == '2' &&
-                    <Input placeholder='magnet:?xt=urn:btih:...' />
+                    <Input placeholder='magnet:?xt=urn:btih:...' onChange={magnetUriChanged} />
                   }
                 </Box>
               </Box>
               <Box>
                 <Text>Save path</Text>
-                <Input />
+                <Input onChange={savePathChanged} />
               </Box>
             </VStack>
             { error &&
@@ -147,7 +153,10 @@ function TorrentListItem(props: TorrentListItemProps) {
           <Flex>
             <Text fontSize='sm' flex={1}>
               <Flex alignItems='center'>
-                {props.torrent.name}
+                {props.torrent.name || <Text as='samp' fontSize='xs'>{props.torrent.info_hash}</Text>}
+                {props.torrent.state===2 &&
+                  <Icon as={MdOutlineFindReplace} ml='1' />
+                }
                 {props.torrent.state===5 &&
                   <Icon as={MdCloudUpload} color='blue.400' ml='1' />
                 }
@@ -172,14 +181,14 @@ function TorrentListItem(props: TorrentListItemProps) {
               <Icon as={MdPeople} size='xs' mr='1' color='gray.400' />
               <Text fontSize='xs' color='gray.500'>{props.torrent.num_peers + props.torrent.num_seeds}</Text>
             </Flex>
-           </HStack>
-          <Progress value={props.torrent.progress*100} size='xs' mt='1' colorScheme={
+          </HStack> 
+          <Progress value={props.torrent.progress*100} size='xs' mt='1' isIndeterminate={props.torrent.state===2} colorScheme={
             props.torrent.state === 5
               ? 'blue'
-              : 'pink'
+              : 'whiteAlpha'
           } />
         </Box>
-        <Menu isLazy>
+        <Menu>
           <MenuButton
             as={IconButton}
             aria-label='Torrent menu'
@@ -191,7 +200,7 @@ function TorrentListItem(props: TorrentListItemProps) {
           <MenuList>
             <MenuGroup title='Actions'>
               <MenuItem icon={<MdOutlineFolder />} onClick={() => pause(props.torrent.info_hash)}>Move</MenuItem>
-              <MenuItem icon={<MdOutlineRemove />} onClick={() => pause(props.torrent.info_hash)}>Remove</MenuItem>
+              <RemoveMenuItem />
             </MenuGroup>
             <MenuGroup title='Other'>
               <MenuItem icon={<MdTag />}>Tags</MenuItem>
