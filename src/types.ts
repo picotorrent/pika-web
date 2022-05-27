@@ -1,7 +1,8 @@
 
 export interface Torrent {
   flags: number;
-  info_hash: string;
+  info_hash_v1: string | null;
+  info_hash_v2: string | null;
   dl: number;
   name: string;
   save_path: string;

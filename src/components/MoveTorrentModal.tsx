@@ -19,7 +19,7 @@ export default function MoveTorrentModal({ onClose, torrent }: MoveTorrentModalP
         }}
         onSubmit={(values, { setSubmitting }) => {
           jsonrpc('torrents.moveStorage', {
-            info_hash: torrent.info_hash,
+            info_hash: torrent.info_hash_v1,
             save_path: values.targetPath
           })
           .then(res => {

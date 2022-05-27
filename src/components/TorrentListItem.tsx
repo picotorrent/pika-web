@@ -37,7 +37,7 @@ export default function TorrentListItem(props: TorrentListItemProps) {
           <Flex>
             <Flex fontSize='sm' flex={1}>
               <HStack alignItems='center'>
-                <Text>{torrent.name || torrent.info_hash} {torrent.flags}</Text>
+                <Text>{torrent.name || torrent.info_hash_v1} {torrent.flags}</Text>
                 {torrent.state===2 &&
                   <Icon as={MdOutlineFindReplace} />
                 }
@@ -92,9 +92,9 @@ export default function TorrentListItem(props: TorrentListItemProps) {
           />
           <MenuList>
             <MenuGroup title='Actions'>
-              <MenuItem icon={<MdPause />} onClick={() => onPause(torrent.info_hash)}>Pause</MenuItem>
+              <MenuItem icon={<MdPause />} onClick={() => onPause(torrent.info_hash_v1!)}>Pause</MenuItem>
               { onMove && <MenuItem icon={<MdDriveFileMove />} onClick={() => onMove(torrent)}>Move</MenuItem> }
-              <RemoveMenuItem hash={torrent.info_hash} />
+              <RemoveMenuItem hash={torrent.info_hash_v1} />
             </MenuGroup>
             <MenuGroup title='Other'>
               <MenuItem icon={<MdLabel />}>Labels</MenuItem>

@@ -1,7 +1,6 @@
-import { Alert, AlertIcon, AlertTitle, AspectRatio, Box, Flex, HStack, IconButton, Image, Input, InputGroup, InputLeftElement, InputRightElement, Kbd, Menu, MenuButton, MenuItem, MenuList, useBreakpoint } from '@chakra-ui/react';
+import { Alert, AlertIcon, AlertTitle, AspectRatio, Box, Flex, HStack, IconButton, Image, Input, InputGroup, InputLeftElement, InputRightElement, Kbd, Menu, MenuButton, MenuItem, MenuList, useBreakpoint, useToast } from '@chakra-ui/react';
 import { HamburgerIcon, SearchIcon } from '@chakra-ui/icons';
-import useSwr from 'swr';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import AddTorrentModal from './components/AddTorrentModal';
 import { Torrent } from './types';
 import TorrentList from './components/TorrentList';
@@ -14,13 +13,52 @@ function pause(hash: string) {
 }
 
 function App() {
-  const { data, error } = useSwr(
-    'session.listTorrents',
-    (key: string) => jsonrpc(key, []),
-    { refreshInterval: 1000 });
-
+  const [torrents, setTorrents] = useState<Torrent[]>([]);
   const [showAddTorrentModal, setShowAddTorrentModal] = useState(false);
   const [moveTorrent, setMoveTorrent] = useState<Torrent | undefined>(undefined);
+  const toast = useToast();
+
+  useEffect(() => {
+    const es = new EventSource('/api/events', {withCredentials: true});
+
+    es.addEventListener('initial_state', e => {
+      for (const torrent of JSON.parse(e.data)) {
+        const {
+          info_hash_v1,
+          info_hash_v2 } = torrent;
+
+        jsonrpc('session.getTorrent', {
+          info_hash_v1,
+          info_hash_v2
+        })
+        .then(r => {
+          setTorrents([ ...torrents, r ]);
+        });
+      }
+    });
+
+    es.addEventListener('torrent_added', (e) => {
+      const {
+        info_hash_v1,
+        info_hash_v2 } = JSON.parse(e.data);
+
+      jsonrpc('session.getTorrent', {
+        info_hash_v1,
+        info_hash_v2
+      })
+      .then(r => {
+        setTorrents([ ...torrents, r ]);
+        toast({
+          position: 'bottom-right',
+          title: 'Torrent added'
+        });
+      });
+    });
+    es.addEventListener('torrent_removed', (e) => {
+      toast({ position: 'bottom-right', title: 'Torrent removed' });
+    })
+    return () => es.close();
+  }, []);
 
   return (
     <Flex mt='20px' justifyContent={'center'} mx='10px'>
@@ -63,18 +101,18 @@ function App() {
             </Menu>
           </Box>
         </HStack>
-        { error &&
+        { /*error &&
           <Alert status='error'>
             <AlertIcon />
             <AlertTitle>Cannot connect to Pika API.</AlertTitle>
           </Alert>
-        }
+        */ }
 
-        { !error && data?.length >= 0 &&
+        { torrents?.length >= 0 &&
           <TorrentList
             onMove={setMoveTorrent}
             onPause={pause}
-            torrents={data as Torrent[]}
+            torrents={torrents}
           />
         }
       </Box>

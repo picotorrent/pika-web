@@ -22,7 +22,7 @@ export default function TorrentList({ onMove, onPause, torrents }: TorrentListPr
     <VStack align={'stretch'} spacing={2}>
       { torrents.map(torrent => 
         <TorrentListItem
-          key={torrent.info_hash}
+          key={torrent.info_hash_v1}
           onMove={onMove}
           onPause={onPause}
           torrent={torrent}
