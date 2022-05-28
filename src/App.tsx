@@ -1,15 +1,35 @@
-import { Alert, AlertIcon, AlertTitle, AspectRatio, Box, Flex, HStack, IconButton, Image, Input, InputGroup, InputLeftElement, InputRightElement, Kbd, Menu, MenuButton, MenuItem, MenuList, useBreakpoint, useToast } from '@chakra-ui/react';
+import { AspectRatio, Box, Flex, HStack, IconButton, Image, Input, InputGroup, InputLeftElement, InputRightElement, Kbd, Menu, MenuButton, MenuItem, MenuList, useToast } from '@chakra-ui/react';
 import { HamburgerIcon, SearchIcon } from '@chakra-ui/icons';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import AddTorrentModal from './components/AddTorrentModal';
-import { Torrent } from './types';
+import { InfoHash, Torrent } from './types';
 import TorrentList from './components/TorrentList';
 import jsonrpc from './services/jsonrpc';
 import MoveTorrentModal from './components/MoveTorrentModal';
 
-function pause(hash: string) {
+function pause(hash: InfoHash) {
   jsonrpc('torrents.pause', [ hash ])
     .catch(console.error);
+}
+
+function resume(hash: InfoHash) {
+  jsonrpc('torrents.resume', [ hash ])
+    .catch(console.error);
+}
+
+function updateTorrents(updated: Torrent[]) : React.SetStateAction<Torrent[]> {
+  return (torrents: Torrent[]) => {
+    for (const updatedTorrent of updated) {
+      const idx = torrents.findIndex(
+        c => c.info_hash[0] === updatedTorrent.info_hash[0]);
+
+      if (idx >= 0) {
+        torrents[idx] = updatedTorrent;
+      }
+    }
+  
+    return [...torrents];
+  }
 }
 
 function App() {
@@ -22,43 +42,62 @@ function App() {
     const es = new EventSource('/api/events', {withCredentials: true});
 
     es.addEventListener('initial_state', e => {
-      for (const torrent of JSON.parse(e.data)) {
-        const {
-          info_hash_v1,
-          info_hash_v2 } = torrent;
+      const data = JSON.parse(e.data);
+      if (data === null) { return; }
 
-        jsonrpc('session.getTorrent', {
-          info_hash_v1,
-          info_hash_v2
-        })
-        .then(r => {
-          setTorrents([ ...torrents, r ]);
+      const { torrents } = data;
+      const hashes = torrents.map((t:any) => t.info_hash);
+
+      jsonrpc('session.getTorrents', [...hashes])
+        .then(r => setTorrents(_ => [...r]));
+    });
+
+    es.addEventListener('state_update', e => {
+      const data = JSON.parse(e.data);
+      const hashes = data.map((t:any) => t.info_hash);
+
+      jsonrpc('session.getTorrents', [...hashes])
+        .then(result => {
+          setTorrents(updateTorrents(result));
         });
-      }
     });
 
     es.addEventListener('torrent_added', (e) => {
-      const {
-        info_hash_v1,
-        info_hash_v2 } = JSON.parse(e.data);
+      const data = JSON.parse(e.data);
 
-      jsonrpc('session.getTorrent', {
-        info_hash_v1,
-        info_hash_v2
+      jsonrpc('session.getTorrents', [data.info_hash])
+        .then(r => setTorrents(t => [...t, ...r]));
+    });
+
+    es.addEventListener('torrent_paused', e => {
+      const data = JSON.parse(e.data);
+      jsonrpc('session.getTorrents', [data.info_hash])
+        .then(r => updateTorrents(r));
+    });
+
+    es.addEventListener('torrent_removed', (e) => {
+      const data = JSON.parse(e.data);
+
+      setTorrents(t => {
+        const updated = t.filter(torrent =>
+          torrent.info_hash[0] !== data.info_hash[0]);
+        return [...updated];
       })
-      .then(r => {
-        setTorrents([ ...torrents, r ]);
-        toast({
-          position: 'bottom-right',
-          title: 'Torrent added'
-        });
+
+      toast({
+        position: 'bottom-right',
+        title: 'Torrent removed'
       });
     });
-    es.addEventListener('torrent_removed', (e) => {
-      toast({ position: 'bottom-right', title: 'Torrent removed' });
-    })
+
+    es.addEventListener('torrent_resumed', e => {
+      const data = JSON.parse(e.data);
+      jsonrpc('session.getTorrents', [data.info_hash])
+        .then(r => updateTorrents(r));
+    });
+
     return () => es.close();
-  }, []);
+  }, [toast]);
 
   return (
     <Flex mt='20px' justifyContent={'center'} mx='10px'>
@@ -112,6 +151,7 @@ function App() {
           <TorrentList
             onMove={setMoveTorrent}
             onPause={pause}
+            onResume={resume}
             torrents={torrents}
           />
         }

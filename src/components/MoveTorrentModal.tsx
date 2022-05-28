@@ -1,4 +1,4 @@
-import { Button, FormControl, FormHelperText, FormLabel, IconButton, Input, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay } from "@chakra-ui/react";
+import { Button, FormControl, FormHelperText, FormLabel, Input, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay } from "@chakra-ui/react";
 import { Formik } from "formik";
 import { MdDriveFileMove } from "react-icons/md";
 import jsonrpc from "../services/jsonrpc";
@@ -19,7 +19,7 @@ export default function MoveTorrentModal({ onClose, torrent }: MoveTorrentModalP
         }}
         onSubmit={(values, { setSubmitting }) => {
           jsonrpc('torrents.moveStorage', {
-            info_hash: torrent.info_hash_v1,
+            info_hash: torrent.info_hash,
             save_path: values.targetPath
           })
           .then(res => {

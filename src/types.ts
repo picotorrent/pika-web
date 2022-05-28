@@ -1,8 +1,10 @@
+export type NullableString = (string|null);
+
+export type InfoHash = [NullableString,NullableString];
 
 export interface Torrent {
   flags: number;
-  info_hash_v1: string | null;
-  info_hash_v2: string | null;
+  info_hash: InfoHash;
   dl: number;
   name: string;
   save_path: string;

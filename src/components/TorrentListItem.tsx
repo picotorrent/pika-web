@@ -1,33 +1,63 @@
 import './TorrentListItem.css';
 
 import { Box, Flex, HStack, Icon, IconButton, Menu, MenuButton, MenuGroup, MenuItem, MenuList, Progress, Tag, Text } from "@chakra-ui/react";
-import { MdOutlineFindReplace, MdCloudUpload, MdFolder, MdDownload, MdUpload, MdPeople, MdSettings, MdOutlineFolder, MdLabel, MdPause, MdDriveFileMove, MdCloudDownload } from "react-icons/md";
-import { Torrent } from "../types";
+import { MdOutlineFindReplace, MdCloudUpload, MdFolder, MdDownload, MdUpload, MdPeople, MdSettings, MdLabel, MdPause, MdDriveFileMove, MdCloudDownload, MdPlayArrow, MdCheck } from "react-icons/md";
+import { InfoHash, Torrent } from "../types";
 import RemoveMenuItem from "./RemoveMenuItem";
 import filesize from 'filesize';
 
 interface TorrentListItemProps {
   onMove?: (torrent: Torrent) => void;
-  onPause: (hash: string) => void | undefined;
+  onPause: (hash: InfoHash) => void;
+  onResume: (hash: InfoHash) => void;
   torrent: Torrent;
+}
+
+function isPaused(torrent: Torrent) {
+  return (torrent.flags & (1<<4)) === 1<<4;
+}
+
+function isCompleted(torrent: Torrent): boolean {
+  return isPaused(torrent) && torrent.state === 5;
 }
 
 export default function TorrentListItem(props: TorrentListItemProps) {
   const {
     onMove,
     onPause,
+    onResume,
     torrent
   } = props;
 
-  const getColor = (state: number) => {
-    switch (state) {
+  const getColor = (t: Torrent) => {
+    if (isCompleted(t)) {
+      return "green";
+    }
+
+    switch (t.state) {
       case 2: // metadata
         return "gray";
       case 3: // downloading
-        return "green";
+        return "blue";
       case 5: // seeding
-        return "blue"
+        return "green"
     }
+  }
+
+  const getIcon = (torrent: Torrent) => {
+    if (isPaused(torrent)) {
+      if (torrent.state === 5) {
+        return MdCheck;
+      }
+      return MdPause;
+    }
+
+    switch (torrent.state) {
+      case 2: return MdOutlineFindReplace;
+      case 5: return MdCloudUpload;
+    }
+
+    return MdCloudDownload;
   }
 
   return (
@@ -37,16 +67,8 @@ export default function TorrentListItem(props: TorrentListItemProps) {
           <Flex>
             <Flex fontSize='sm' flex={1}>
               <HStack alignItems='center'>
-                <Text>{torrent.name || torrent.info_hash_v1} {torrent.flags}</Text>
-                {torrent.state===2 &&
-                  <Icon as={MdOutlineFindReplace} />
-                }
-                {torrent.state===3 &&
-                  <Icon as={MdCloudDownload} color="green.300" />
-                }
-                {torrent.state===5 &&
-                  <Icon as={MdCloudUpload} color='blue.400' />
-                }
+                <Text>{torrent.name || torrent.info_hash[0]}</Text>
+                <Icon as={getIcon(torrent)} color={getColor(torrent)} />
               </HStack>
             </Flex>
             <Tag size='sm'>Linux ISOs</Tag>
@@ -78,7 +100,7 @@ export default function TorrentListItem(props: TorrentListItemProps) {
             size="xs"
             mt={1}
             isIndeterminate={torrent.state===2}
-            colorScheme={getColor(torrent.state)}
+            colorScheme={getColor(torrent)}
           />
         </Box>
         <Menu>
@@ -92,9 +114,14 @@ export default function TorrentListItem(props: TorrentListItemProps) {
           />
           <MenuList>
             <MenuGroup title='Actions'>
-              <MenuItem icon={<MdPause />} onClick={() => onPause(torrent.info_hash_v1!)}>Pause</MenuItem>
+              {
+                isPaused(torrent)
+                  ? <MenuItem icon={<MdPlayArrow />} onClick={() => onResume(torrent.info_hash)}>Resume</MenuItem>
+                  : <MenuItem icon={<MdPause />} onClick={() => onPause(torrent.info_hash)}>Pause</MenuItem>
+              }
+
               { onMove && <MenuItem icon={<MdDriveFileMove />} onClick={() => onMove(torrent)}>Move</MenuItem> }
-              <RemoveMenuItem hash={torrent.info_hash_v1} />
+              <RemoveMenuItem hash={torrent.info_hash} />
             </MenuGroup>
             <MenuGroup title='Other'>
               <MenuItem icon={<MdLabel />}>Labels</MenuItem>
