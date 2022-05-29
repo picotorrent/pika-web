@@ -7,6 +7,7 @@ import RemoveMenuItem from "./RemoveMenuItem";
 import filesize from 'filesize';
 
 interface TorrentListItemProps {
+  category?: string;
   onEditLabels?: (torrent: Torrent) => void;
   onMove?: (torrent: Torrent) => void;
   onPause: (hash: InfoHash) => void;
@@ -24,6 +25,7 @@ function isCompleted(torrent: Torrent): boolean {
 
 export default function TorrentListItem(props: TorrentListItemProps) {
   const {
+    category,
     onEditLabels,
     onMove,
     onPause,
@@ -73,7 +75,7 @@ export default function TorrentListItem(props: TorrentListItemProps) {
                 <Icon as={getIcon(torrent)} color={getColor(torrent)} />
               </HStack>
             </Flex>
-            <Tag size='sm'>Linux ISOs</Tag>
+            { category && <Tag size='sm'>{category}</Tag> }
           </Flex>
           <HStack spacing='3' mt='1'>
             <Flex alignItems={'center'} flex='1'>

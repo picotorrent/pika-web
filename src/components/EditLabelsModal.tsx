@@ -1,9 +1,10 @@
 import { Box, Button, Flex, IconButton, Input, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay, Text, VStack } from "@chakra-ui/react";
-import { ErrorMessage, FieldArray, Formik } from "formik";
+import { FieldArray, Formik } from "formik";
 import { MdAdd, MdLabel, MdRemove } from "react-icons/md";
 import jsonrpc from "../services/jsonrpc";
 import { Torrent } from "../types"
 import * as Yup from 'yup';
+import { useEffect, useState } from "react";
 
 interface EditLabelsModalProps {
   onClose: () => void;
@@ -25,24 +26,36 @@ const LabelsSchema = Yup.object().shape({
 });
 
 export default function EditLabelsModal({ onClose, torrent }: EditLabelsModalProps) {
+  const [labels, setLabels] = useState<LabelItem[]>([]);
+
+  useEffect(() => {
+    jsonrpc('torrents.getLabels', [ torrent.info_hash ])
+      .then(r => {
+        const labels = Object.keys(r[0].labels).map(key => {
+          return { name: key, value: r[0].labels[key] }
+        });
+
+        setLabels([...labels]);
+      });
+  }, []);
+
   return (
     <Modal isOpen={!!torrent} onClose={onClose} size='lg'>
       <ModalOverlay />
       <Formik
+        enableReinitialize={true}
         initialValues={{
-          labels: Array<LabelItem>()
+          labels
         }}
         onSubmit={(values, { setSubmitting }) => {
-          const labels: Record<string, string> = {};
+          const l: Record<string, string> = {};
 
           for (const label of values.labels) {
-            labels[label.name] = label.value;
+            l[label.name] = label.value;
           }
 
-          jsonrpc('torrents.setLabels', [{
-            info_hash: torrent.info_hash,
-            labels
-          }]).then(r => onClose());
+          jsonrpc('torrents.setLabels', [{ info_hash: torrent.info_hash, labels: l }])
+            .then(r => onClose());
         }}
         validationSchema={LabelsSchema}
       >
@@ -66,7 +79,14 @@ export default function EditLabelsModal({ onClose, torrent }: EditLabelsModalPro
                         <Flex alignItems="center">
                           <Box flex="1"><Text fontWeight="bold">Value</Text></Box>
                           <Box>
-                            <IconButton onClick={() => arrayHelpers.push({ name: "foo", value: "bar"})} aria-label="Add label" icon={<MdAdd />} size="xs" variant="outline" colorScheme="gray" />
+                            <IconButton
+                              aria-label="Add label"
+                              onClick={() => arrayHelpers.push({ name: "new-label", value: "some value"})}
+                              icon={<MdAdd />}
+                              size="xs"
+                              variant="outline"
+                              colorScheme="gray"
+                            />
                           </Box>
                         </Flex>
                       </Box>
@@ -80,7 +100,15 @@ export default function EditLabelsModal({ onClose, torrent }: EditLabelsModalPro
                           <Box flex="2">
                             <Flex alignItems="center">
                               <Input name={`labels.${index}.value`} onChange={handleChange} value={l.value} flex="1" size="sm" />
-                              <IconButton onClick={() => arrayHelpers.remove(index)} aria-label="Remove" icon={<MdRemove />} ml="2" size="xs" variant="outline" colorScheme="gray" />
+                              <IconButton
+                                aria-label="Remove"
+                                onClick={() => arrayHelpers.remove(index)}
+                                icon={<MdRemove />}
+                                ml="2"
+                                size="xs"
+                                variant="outline"
+                                colorScheme="gray"
+                              />
                             </Flex>
                           </Box>
                         </Flex>

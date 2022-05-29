@@ -10,6 +10,11 @@ interface MoveStorageParams {
   save_path: string;
 }
 
+interface GetLabelsResult {
+  info_hash: InfoHash;
+  labels: Record<string, string>;
+}
+
 interface SetLabelsParams {
   info_hash: InfoHash;
   labels: Record<string, string>;
@@ -17,6 +22,7 @@ interface SetLabelsParams {
 
 export default function jsonrpc(method: 'session.addTorrent',   params: AddTorrentParams):  Promise<InfoHash>;
 export default function jsonrpc(method: 'session.getTorrents',  params: InfoHash[]):        Promise<Torrent[]>;
+export default function jsonrpc(method: 'torrents.getLabels',   params: InfoHash[]):        Promise<GetLabelsResult[]>;
 export default function jsonrpc(method: 'torrents.moveStorage', params: MoveStorageParams): Promise<boolean>;
 export default function jsonrpc(method: 'torrents.pause',       params: InfoHash[]):        Promise<boolean>;
 export default function jsonrpc(method: 'torrents.resume',      params: InfoHash[]):        Promise<boolean>;
