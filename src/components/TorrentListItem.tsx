@@ -2,11 +2,12 @@ import './TorrentListItem.css';
 
 import { Box, Flex, HStack, Icon, IconButton, Menu, MenuButton, MenuGroup, MenuItem, MenuList, Progress, Tag, Text } from "@chakra-ui/react";
 import { MdOutlineFindReplace, MdCloudUpload, MdFolder, MdDownload, MdUpload, MdPeople, MdSettings, MdLabel, MdPause, MdDriveFileMove, MdCloudDownload, MdPlayArrow, MdCheck } from "react-icons/md";
-import { InfoHash, Torrent } from "../types";
+import { InfoHash, Torrent, TorrentState } from "../types";
 import RemoveMenuItem from "./RemoveMenuItem";
 import filesize from 'filesize';
 
 interface TorrentListItemProps {
+  onEditLabels?: (torrent: Torrent) => void;
   onMove?: (torrent: Torrent) => void;
   onPause: (hash: InfoHash) => void;
   onResume: (hash: InfoHash) => void;
@@ -18,11 +19,12 @@ function isPaused(torrent: Torrent) {
 }
 
 function isCompleted(torrent: Torrent): boolean {
-  return isPaused(torrent) && torrent.state === 5;
+  return isPaused(torrent) && torrent.state === TorrentState.Seeding;
 }
 
 export default function TorrentListItem(props: TorrentListItemProps) {
   const {
+    onEditLabels,
     onMove,
     onPause,
     onResume,
@@ -35,11 +37,11 @@ export default function TorrentListItem(props: TorrentListItemProps) {
     }
 
     switch (t.state) {
-      case 2: // metadata
+      case TorrentState.Metadata:
         return "gray";
-      case 3: // downloading
+      case TorrentState.Downloading:
         return "blue";
-      case 5: // seeding
+      case TorrentState.Seeding:
         return "green"
     }
   }
@@ -78,7 +80,7 @@ export default function TorrentListItem(props: TorrentListItemProps) {
               <Icon as={MdFolder} size='xs' mr='1' color='gray.400' />
               <Text fontSize={'xs'} color='gray.500'>{torrent.save_path}</Text>
             </Flex>
-            { torrent.state !== 2 && (
+            { torrent.state !== TorrentState.Metadata && (
               <>
                 <Flex alignItems='end'>
                   <Icon as={MdDownload} size='xs' mr='1' color='gray.400' />
@@ -99,7 +101,7 @@ export default function TorrentListItem(props: TorrentListItemProps) {
             value={torrent.progress*100}
             size="xs"
             mt={1}
-            isIndeterminate={torrent.state===2}
+            isIndeterminate={torrent.state === TorrentState.Metadata}
             colorScheme={getColor(torrent)}
           />
         </Box>
@@ -124,7 +126,7 @@ export default function TorrentListItem(props: TorrentListItemProps) {
               <RemoveMenuItem hash={torrent.info_hash} />
             </MenuGroup>
             <MenuGroup title='Other'>
-              <MenuItem icon={<MdLabel />}>Labels</MenuItem>
+              { onEditLabels && <MenuItem icon={<MdLabel />} onClick={() => onEditLabels(torrent)}>Labels</MenuItem> }
             </MenuGroup>
           </MenuList>
         </Menu>

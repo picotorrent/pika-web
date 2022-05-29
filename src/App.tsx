@@ -6,6 +6,7 @@ import { InfoHash, Torrent } from './types';
 import TorrentList from './components/TorrentList';
 import jsonrpc from './services/jsonrpc';
 import MoveTorrentModal from './components/MoveTorrentModal';
+import EditLabelsModal from './components/EditLabelsModal';
 
 function pause(hash: InfoHash) {
   jsonrpc('torrents.pause', [ hash ])
@@ -35,6 +36,7 @@ function updateTorrents(updated: Torrent[]) : React.SetStateAction<Torrent[]> {
 function App() {
   const [torrents, setTorrents] = useState<Torrent[]>([]);
   const [showAddTorrentModal, setShowAddTorrentModal] = useState(false);
+  const [editLabels, setEditLabels] = useState<Torrent | undefined>(undefined);
   const [moveTorrent, setMoveTorrent] = useState<Torrent | undefined>(undefined);
   const toast = useToast();
 
@@ -149,6 +151,7 @@ function App() {
 
         { torrents?.length >= 0 &&
           <TorrentList
+            onEditLabels={setEditLabels}
             onMove={setMoveTorrent}
             onPause={pause}
             onResume={resume}
@@ -156,6 +159,13 @@ function App() {
           />
         }
       </Box>
+
+      { editLabels &&
+        <EditLabelsModal
+          onClose={() => setEditLabels(undefined) }
+          torrent={editLabels}
+        />
+      }
 
       { moveTorrent &&
         <MoveTorrentModal
