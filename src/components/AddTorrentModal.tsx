@@ -1,6 +1,6 @@
 import { Alert, AlertDescription, AlertIcon, AlertTitle, Box, Button, Input, Modal, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalOverlay, Radio, RadioGroup, Stack, Text, VStack } from "@chakra-ui/react";
 import { Formik } from "formik";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import jsonrpc from "../services/jsonrpc";
 
 const readFile = (blob: Blob) => {
@@ -23,16 +23,23 @@ interface AddTorrentModalProps {
 
 export default function AddTorrentModal({ isOpen, onClose }: AddTorrentModalProps) {
   const [error, setError] = useState<any>();
+  const [settings, setSettings] = useState<Record<string,string>>({});
+
+  useEffect(() => {
+    jsonrpc('config.get', [ 'save_path' ])
+      .then(r => setSettings({ ...r }));
+  }, []);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size='xl'>
       <ModalOverlay />
       <Formik
+        enableReinitialize={true}
         initialValues={{
           type: '1',
           ti: Blob,
           magnetLink: '',
-          savePath: ''
+          savePath: settings.save_path
         }}
         onSubmit={(values, { setSubmitting }) => {
           const params = {

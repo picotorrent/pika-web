@@ -7,6 +7,7 @@ import TorrentList from './components/TorrentList';
 import jsonrpc from './services/jsonrpc';
 import MoveTorrentModal from './components/MoveTorrentModal';
 import EditLabelsModal from './components/EditLabelsModal';
+import SettingsModal from './components/SettingsModal';
 
 function pause(hash: InfoHash) {
   jsonrpc('torrents.pause', [ hash ])
@@ -36,6 +37,7 @@ function updateTorrents(updated: Torrent[]) : React.SetStateAction<Torrent[]> {
 function App() {
   const [torrents, setTorrents] = useState<Torrent[]>([]);
   const [showAddTorrentModal, setShowAddTorrentModal] = useState(false);
+  const [showSettings, setShowSettings] = useState<boolean>(false);
   const [editLabels, setEditLabels] = useState<Torrent | undefined>(undefined);
   const [moveTorrent, setMoveTorrent] = useState<Torrent | undefined>(undefined);
   const toast = useToast();
@@ -137,7 +139,7 @@ function App() {
               />
               <MenuList>
                 <MenuItem onClick={() => setShowAddTorrentModal(true)}>Add torrent</MenuItem>
-                <MenuItem>Settings</MenuItem>
+                <MenuItem onClick={() => setShowSettings(true)}>Settings</MenuItem>
               </MenuList>
             </Menu>
           </Box>
@@ -178,6 +180,13 @@ function App() {
         <AddTorrentModal
           isOpen={showAddTorrentModal}
           onClose={() => setShowAddTorrentModal(false) }
+        />
+      }
+
+      { showSettings &&
+        <SettingsModal
+          isOpen={showSettings}
+          onClose={() => setShowSettings(false) }
         />
       }
     </Flex>
