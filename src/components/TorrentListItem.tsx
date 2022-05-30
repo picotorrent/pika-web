@@ -69,11 +69,11 @@ export default function TorrentListItem(props: TorrentListItemProps) {
       <Flex alignItems={'center'}>
         <Box flex='1'>
           <Flex>
-            <Flex fontSize='sm' flex={1}>
-              <HStack alignItems='center'>
-                <Text>{torrent.name || torrent.info_hash[0]}</Text>
-                <Icon as={getIcon(torrent)} color={getColor(torrent)} />
-              </HStack>
+            <Flex fontSize='sm' flex={1} alignItems="center">
+              <Box flex="1">
+                <Text noOfLines={1} title={torrent.name} >{torrent.name || torrent.info_hash[0]}</Text>
+              </Box>
+              <Icon as={getIcon(torrent)} color={getColor(torrent)} />
             </Flex>
             { category && <Tag size='sm'>{category}</Tag> }
           </Flex>
@@ -82,7 +82,7 @@ export default function TorrentListItem(props: TorrentListItemProps) {
               <Icon as={MdFolder} size='xs' mr='1' color='gray.400' />
               <Text fontSize={'xs'} color='gray.500'>{torrent.save_path}</Text>
             </Flex>
-            { torrent.state !== TorrentState.Metadata && (
+            { torrent.state !== TorrentState.Metadata && !isCompleted(torrent) && (
               <>
                 <Flex alignItems='end'>
                   <Icon as={MdDownload} size='xs' mr='1' color='gray.400' />
@@ -103,7 +103,7 @@ export default function TorrentListItem(props: TorrentListItemProps) {
             value={torrent.progress*100}
             size="xs"
             mt={1}
-            isIndeterminate={torrent.state === TorrentState.Metadata}
+            isIndeterminate={torrent.state === TorrentState.Metadata && !isPaused(torrent)}
             colorScheme={getColor(torrent)}
           />
         </Box>
