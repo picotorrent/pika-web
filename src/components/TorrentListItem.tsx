@@ -71,7 +71,7 @@ export default function TorrentListItem(props: TorrentListItemProps) {
           <Flex>
             <Flex fontSize='sm' flex={1} alignItems="center">
               <Box flex="1">
-                <Text noOfLines={1} title={torrent.name} >{torrent.name || torrent.info_hash[0]}</Text>
+                <Text noOfLines={1} overflowWrap="anywhere" title={torrent.name} >{torrent.name || torrent.info_hash[0]}</Text>
               </Box>
               <Icon as={getIcon(torrent)} color={getColor(torrent)} />
             </Flex>
