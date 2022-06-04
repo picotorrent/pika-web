@@ -1,10 +1,10 @@
-import './TorrentListItem.css';
+import "./TorrentListItem.css";
 
 import { Box, Flex, HStack, Icon, IconButton, Menu, MenuButton, MenuGroup, MenuItem, MenuList, Progress, Tag, Text } from "@chakra-ui/react";
 import { MdOutlineFindReplace, MdCloudUpload, MdFolder, MdDownload, MdUpload, MdPeople, MdSettings, MdLabel, MdPause, MdDriveFileMove, MdCloudDownload, MdPlayArrow, MdCheck } from "react-icons/md";
 import { InfoHash, Torrent, TorrentState } from "../types";
 import RemoveMenuItem from "./RemoveMenuItem";
-import filesize from 'filesize';
+import filesize from "filesize";
 
 interface TorrentListItemProps {
   category?: string;
@@ -98,7 +98,7 @@ export default function TorrentListItem(props: TorrentListItemProps) {
                 </Flex>
               </>
             )}
-          </HStack> 
+          </HStack>
           <Progress
             value={torrent.progress*100}
             size="xs"

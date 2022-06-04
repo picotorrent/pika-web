@@ -1,13 +1,14 @@
-import { AspectRatio, Box, Flex, HStack, IconButton, Image, Input, InputGroup, InputLeftElement, InputRightElement, Kbd, Menu, MenuButton, MenuItem, MenuList, useToast } from '@chakra-ui/react';
-import { HamburgerIcon, SearchIcon } from '@chakra-ui/icons';
-import React, { useEffect, useState } from 'react';
-import AddTorrentModal from './components/AddTorrentModal';
-import { InfoHash, Torrent } from './types';
-import TorrentList from './components/TorrentList';
-import jsonrpc from './services/jsonrpc';
-import MoveTorrentModal from './components/MoveTorrentModal';
-import EditLabelsModal from './components/EditLabelsModal';
-import SettingsModal from './components/SettingsModal';
+import { AspectRatio, Box, Divider, Flex, HStack, IconButton, Image, Input, InputGroup, InputLeftElement, InputRightElement, Kbd, Menu, MenuButton, MenuItem, MenuList, useToast } from "@chakra-ui/react";
+import { AddIcon, HamburgerIcon, SearchIcon, SettingsIcon } from "@chakra-ui/icons";
+import React, { useEffect, useState } from "react";
+import AddTorrentModal from "./components/AddTorrentModal";
+import { InfoHash, Torrent } from "./types";
+import TorrentList from "./components/TorrentList";
+import jsonrpc from "./services/jsonrpc";
+import MoveTorrentModal from "./components/MoveTorrentModal";
+import EditLabelsModal from "./components/EditLabelsModal";
+import SettingsModal from "./components/SettingsModal";
+import ToggleTheme from "./components/ToggleTheme";
 
 function pause(hash: InfoHash) {
   jsonrpc('torrents.pause', [ hash ])
@@ -29,7 +30,7 @@ function updateTorrents(updated: Torrent[]) : React.SetStateAction<Torrent[]> {
         torrents[idx] = updatedTorrent;
       }
     }
-  
+
     return [...torrents];
   }
 }
@@ -106,10 +107,10 @@ function App() {
   return (
     <Flex mt='20px' justifyContent={'center'} mx='10px'>
       <Box w='640px'>
-        <HStack alignItems={'center'} borderBottom={'1px solid #f0f0f0'} align='stretch' mb='3' pb={'3'}>
+        <HStack alignItems={'center'} align='stretch' mb='3'>
           <Box>
             <AspectRatio w={'32px'} ratio={1}>
-              <Image src='/logo.png' />
+              <Image src='/assets/brand/logo.svg' />
             </AspectRatio>
           </Box>
           <Box flex={1}>
@@ -129,7 +130,10 @@ function App() {
             </InputGroup>
           </Box>
           <Box>
-            <Menu>
+            <ToggleTheme />
+          </Box>
+          <Box>
+            <Menu placement="bottom-end">
               <MenuButton
                 as={IconButton}
                 aria-label='Menu'
@@ -138,8 +142,12 @@ function App() {
                 variant='outline'
               />
               <MenuList>
-                <MenuItem onClick={() => setShowAddTorrentModal(true)}>Add torrent</MenuItem>
-                <MenuItem onClick={() => setShowSettings(true)}>Settings</MenuItem>
+                <MenuItem icon={<AddIcon />} onClick={() => setShowAddTorrentModal(true)}>
+                  Add torrent
+                </MenuItem>
+                <MenuItem icon={<SettingsIcon />} onClick={() => setShowSettings(true)}>
+                  Settings
+                </MenuItem>
               </MenuList>
             </Menu>
           </Box>
@@ -150,7 +158,7 @@ function App() {
             <AlertTitle>Cannot connect to Pika API.</AlertTitle>
           </Alert>
         */ }
-
+        <Divider orientation='horizontal' mb='3' />
         { torrents?.length >= 0 &&
           <TorrentList
             onEditLabels={setEditLabels}
