@@ -38,6 +38,10 @@ export default function TorrentListItem(props: TorrentListItemProps) {
       return "green";
     }
 
+    if (isPaused(t)) {
+      return "gray";
+    }
+
     switch (t.state) {
       case TorrentState.Metadata:
         return "gray";
@@ -50,15 +54,15 @@ export default function TorrentListItem(props: TorrentListItemProps) {
 
   const getIcon = (torrent: Torrent) => {
     if (isPaused(torrent)) {
-      if (torrent.state === 5) {
+      if (torrent.state === TorrentState.Seeding) {
         return MdCheck;
       }
       return MdPause;
     }
 
     switch (torrent.state) {
-      case 2: return MdOutlineFindReplace;
-      case 5: return MdCloudUpload;
+      case TorrentState.Metadata: return MdOutlineFindReplace;
+      case TorrentState.Seeding: return MdCloudUpload;
     }
 
     return MdCloudDownload;
@@ -75,6 +79,7 @@ export default function TorrentListItem(props: TorrentListItemProps) {
               </Box>
               <Icon as={getIcon(torrent)} color={getColor(torrent)} />
             </Flex>
+            { torrent.flags }
             { category && <Tag size='sm'>{category}</Tag> }
           </Flex>
           <HStack spacing='3' mt='1'>
@@ -82,7 +87,7 @@ export default function TorrentListItem(props: TorrentListItemProps) {
               <Icon as={MdFolder} size='xs' mr='1' color='gray.400' />
               <Text fontSize={'xs'} color='gray.500'>{torrent.save_path}</Text>
             </Flex>
-            { torrent.state !== TorrentState.Metadata && !isCompleted(torrent) && (
+            { torrent.state !== TorrentState.Metadata && !isPaused(torrent) && !isCompleted(torrent) && (
               <>
                 <Flex alignItems='end'>
                   <Icon as={MdDownload} size='xs' mr='1' color='gray.400' />

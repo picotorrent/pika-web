@@ -1,4 +1,4 @@
-import { AspectRatio, Box, Divider, Flex, HStack, IconButton, Image, Input, InputGroup, InputLeftElement, InputRightElement, Kbd, Menu, MenuButton, MenuItem, MenuList, useToast } from "@chakra-ui/react";
+import { AspectRatio, Box, Button, Divider, Flex, HStack, IconButton, Image, Input, InputGroup, InputLeftElement, InputRightElement, Kbd, Menu, MenuButton, MenuItem, MenuList, useToast } from "@chakra-ui/react";
 import { AddIcon, HamburgerIcon, SearchIcon, SettingsIcon } from "@chakra-ui/icons";
 import React, { useEffect, useState } from "react";
 import AddTorrentModal from "./components/AddTorrentModal";
@@ -9,6 +9,8 @@ import MoveTorrentModal from "./components/MoveTorrentModal";
 import EditLabelsModal from "./components/EditLabelsModal";
 import SettingsModal from "./components/SettingsModal";
 import ToggleTheme from "./components/ToggleTheme";
+import * as nearley from 'nearley';
+import * as pql from './grammar/pql';
 
 function pause(hash: InfoHash) {
   jsonrpc('torrents.pause', [ hash ])
@@ -104,8 +106,15 @@ function App() {
     return () => es.close();
   }, [toast]);
 
+  const testParser = () => {
+    const parser = new nearley.Parser(nearley.Grammar.fromCompiled(pql));
+    parser.feed("not is:completed");
+    console.log(parser.results[0]);
+  }
+
   return (
     <Flex mt='20px' justifyContent={'center'} mx='10px'>
+      <Button onClick={() => testParser()}>Hej</Button>
       <Box w='640px'>
         <HStack alignItems={'center'} align='stretch' mb='3'>
           <Box>
