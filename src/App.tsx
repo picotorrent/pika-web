@@ -1,8 +1,8 @@
-import { AspectRatio, Box, Button, Divider, Flex, HStack, IconButton, Image, Input, InputGroup, InputLeftElement, InputRightElement, Kbd, Menu, MenuButton, MenuItem, MenuList, useToast } from "@chakra-ui/react";
-import { AddIcon, HamburgerIcon, SearchIcon, SettingsIcon } from "@chakra-ui/icons";
+import { AspectRatio, Box, Divider, Flex, HStack, IconButton, Image, Menu, MenuButton, MenuItem, MenuList, Stack, useToast } from "@chakra-ui/react";
+import { AddIcon, HamburgerIcon, SettingsIcon } from "@chakra-ui/icons";
 import React, { useEffect, useState } from "react";
 import AddTorrentModal from "./components/AddTorrentModal";
-import { InfoHash, Torrent } from "./types";
+import { InfoHash, Torrent, TorrentFilter } from "./types";
 import TorrentList from "./components/TorrentList";
 import jsonrpc from "./services/jsonrpc";
 import MoveTorrentModal from "./components/MoveTorrentModal";
@@ -11,6 +11,10 @@ import SettingsModal from "./components/SettingsModal";
 import ToggleTheme from "./components/ToggleTheme";
 import * as nearley from 'nearley';
 import * as pql from './grammar/pql';
+import CommandInput from "./components/CommandInput";
+import Filter from "./components/Filter";
+
+const grammar = nearley.Grammar.fromCompiled(pql);
 
 function pause(hash: InfoHash) {
   jsonrpc('torrents.pause', [ hash ])
@@ -39,6 +43,8 @@ function updateTorrents(updated: Torrent[]) : React.SetStateAction<Torrent[]> {
 
 function App() {
   const [torrents, setTorrents] = useState<Torrent[]>([]);
+  const [filters, setFilters] = useState<TorrentFilter[]>([]);
+
   const [showAddTorrentModal, setShowAddTorrentModal] = useState(false);
   const [showSettings, setShowSettings] = useState<boolean>(false);
   const [editLabels, setEditLabels] = useState<Torrent | undefined>(undefined);
@@ -106,15 +112,17 @@ function App() {
     return () => es.close();
   }, [toast]);
 
-  const testParser = () => {
-    const parser = new nearley.Parser(nearley.Grammar.fromCompiled(pql));
-    parser.feed("not is:completed");
-    console.log(parser.results[0]);
+  const handleCommandInputExecute = (cmd: string) => {
+    const parser = new nearley.Parser(grammar);
+    parser.feed(cmd);
+    setFilters([
+      { text: cmd, filter: parser.results[0] as (t: Torrent) => boolean},
+      ...filters
+    ])
   }
 
   return (
     <Flex mt='20px' justifyContent={'center'} mx='10px'>
-      <Button onClick={() => testParser()}>Hej</Button>
       <Box w='640px'>
         <HStack alignItems={'center'} align='stretch' mb='3'>
           <Box>
@@ -123,20 +131,7 @@ function App() {
             </AspectRatio>
           </Box>
           <Box flex={1}>
-            <InputGroup>
-              <InputLeftElement
-                pointerEvents={'none'}
-                children={<SearchIcon color={'gray.300'} />}
-              />
-              <Input placeholder='Search torrents...' />
-              {}
-              <InputRightElement pointerEvents={'none'} width='6em'>
-                <HStack>
-                  <Kbd>Ctrl</Kbd>
-                  <Kbd>K</Kbd>
-                </HStack>
-              </InputRightElement>
-            </InputGroup>
+            <CommandInput onExecute={handleCommandInputExecute} />
           </Box>
           <Box>
             <ToggleTheme />
@@ -167,13 +162,28 @@ function App() {
             <AlertTitle>Cannot connect to Pika API.</AlertTitle>
           </Alert>
         */ }
-        <Divider orientation='horizontal' mb='3' />
+        <Divider orientation='horizontal' mb="2" />
+        { filters?.length >= 0 &&
+          <Stack direction="row" mb="2">
+          { filters.map((f, idx) => (
+              <Filter
+                key={f.text}
+                onRemove={() => {
+                  setFilters(() => [...filters.splice(idx, 1)])
+                }}
+                text={f.text}
+              />
+            ))
+          }
+          </Stack>
+        }
         { torrents?.length >= 0 &&
           <TorrentList
             onEditLabels={setEditLabels}
             onMove={setMoveTorrent}
             onPause={pause}
             onResume={resume}
+            filters={filters}
             torrents={torrents}
           />
         }

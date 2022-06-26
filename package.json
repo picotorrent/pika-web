@@ -27,7 +27,7 @@
   "scripts": {
     "compile-grammar": "nearleyc src/grammar/pql.ne -o src/grammar/pql.js",
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "npm run compile-grammar && react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },

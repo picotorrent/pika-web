@@ -79,26 +79,25 @@ export default function TorrentListItem(props: TorrentListItemProps) {
               </Box>
               <Icon as={getIcon(torrent)} color={getColor(torrent)} />
             </Flex>
-            { torrent.flags }
             { category && <Tag size='sm'>{category}</Tag> }
           </Flex>
           <HStack spacing='3' mt='1'>
             <Flex alignItems={'center'} flex='1'>
-              <Icon as={MdFolder} size='xs' mr='1' color='gray.400' />
+              <Icon as={MdFolder} mr='1' color='gray.400' />
               <Text fontSize={'xs'} color='gray.500'>{torrent.save_path}</Text>
             </Flex>
             { torrent.state !== TorrentState.Metadata && !isPaused(torrent) && !isCompleted(torrent) && (
               <>
                 <Flex alignItems='end'>
-                  <Icon as={MdDownload} size='xs' mr='1' color='gray.400' />
+                  <Icon as={MdDownload} mr='1' color='gray.400' />
                   <Text fontSize='xs' color='gray.500'>{filesize(torrent.dl)}/s</Text>
                 </Flex>
                 <Flex alignItems='end'>
-                  <Icon as={MdUpload} size='xs' mr='1' color='gray.400' />
+                  <Icon as={MdUpload} mr='1' color='gray.400' />
                   <Text fontSize='xs' color='gray.500'>{filesize(torrent.ul)}/s</Text>
                 </Flex>
                 <Flex alignItems='center'>
-                  <Icon as={MdPeople} size='xs' mr='1' color='gray.400' />
+                  <Icon as={MdPeople} mr='1' color='gray.400' />
                   <Text fontSize='xs' color='gray.500'>{torrent.num_peers + torrent.num_seeds}</Text>
                 </Flex>
               </>
