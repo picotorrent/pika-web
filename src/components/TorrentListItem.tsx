@@ -38,6 +38,10 @@ export default function TorrentListItem(props: TorrentListItemProps) {
       return "green";
     }
 
+    if (isPaused(t)) {
+      return "gray";
+    }
+
     switch (t.state) {
       case TorrentState.Metadata:
         return "gray";
@@ -50,15 +54,15 @@ export default function TorrentListItem(props: TorrentListItemProps) {
 
   const getIcon = (torrent: Torrent) => {
     if (isPaused(torrent)) {
-      if (torrent.state === 5) {
+      if (torrent.state === TorrentState.Seeding) {
         return MdCheck;
       }
       return MdPause;
     }
 
     switch (torrent.state) {
-      case 2: return MdOutlineFindReplace;
-      case 5: return MdCloudUpload;
+      case TorrentState.Metadata: return MdOutlineFindReplace;
+      case TorrentState.Seeding: return MdCloudUpload;
     }
 
     return MdCloudDownload;
@@ -79,21 +83,21 @@ export default function TorrentListItem(props: TorrentListItemProps) {
           </Flex>
           <HStack spacing='3' mt='1'>
             <Flex alignItems={'center'} flex='1'>
-              <Icon as={MdFolder} size='xs' mr='1' color='gray.400' />
+              <Icon as={MdFolder} mr='1' color='gray.400' />
               <Text fontSize={'xs'} color='gray.500'>{torrent.save_path}</Text>
             </Flex>
-            { torrent.state !== TorrentState.Metadata && !isCompleted(torrent) && (
+            { torrent.state !== TorrentState.Metadata && !isPaused(torrent) && !isCompleted(torrent) && (
               <>
                 <Flex alignItems='end'>
-                  <Icon as={MdDownload} size='xs' mr='1' color='gray.400' />
+                  <Icon as={MdDownload} mr='1' color='gray.400' />
                   <Text fontSize='xs' color='gray.500'>{filesize(torrent.dl)}/s</Text>
                 </Flex>
                 <Flex alignItems='end'>
-                  <Icon as={MdUpload} size='xs' mr='1' color='gray.400' />
+                  <Icon as={MdUpload} mr='1' color='gray.400' />
                   <Text fontSize='xs' color='gray.500'>{filesize(torrent.ul)}/s</Text>
                 </Flex>
                 <Flex alignItems='center'>
-                  <Icon as={MdPeople} size='xs' mr='1' color='gray.400' />
+                  <Icon as={MdPeople} mr='1' color='gray.400' />
                   <Text fontSize='xs' color='gray.500'>{torrent.num_peers + torrent.num_seeds}</Text>
                 </Flex>
               </>

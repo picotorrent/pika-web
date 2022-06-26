@@ -22,3 +22,8 @@ export interface Torrent {
   progress: number;
   state: Values<typeof TorrentState>;
 }
+
+export interface TorrentFilter {
+  text: string;
+  filter: (torrent: Torrent) => boolean;
+}
